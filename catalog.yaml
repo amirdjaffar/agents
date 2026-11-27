@@ -1,0 +1,249 @@
+# Each part has a rule and its opposite. A repo picks either, or leaves the
+# part unset. Groups marked `one` pick a single part instead.
+
+- id: supervision
+  title: Supervision
+  summary: how much an agent may do before a human checks its work
+  one: true
+  parts:
+    - id: paired
+      summary: a human follows every step; the agent never commits
+      rule: |-
+        A human follows every step.
+
+        - Make one change at a time and explain it before moving on.
+        - Never commit, push, or act outside the working tree (issues, PRs, comments).
+    - id: reviewed
+      summary: edits freely; a human reviews before each commit
+      default: rule
+      rule: |-
+        A human reviews every change before it is committed.
+
+        - Edit freely in the working tree.
+        - Do not commit or push until asked. Propose a commit message; a human writes or approves it.
+        - Confirm before opening or changing issues, PRs or comments.
+        - Never merge.
+    - id: delegated
+      summary: works on its own branch and opens PRs
+      rule: |-
+        A human reviews the finished work as a PR.
+
+        - Work on your own branch. Never push to the default branch.
+        - Commit and push to that branch, and open a PR for the work.
+        - Open or comment on issues and PRs about your own work.
+        - A human approves the final commit message when merging. Never merge.
+    - id: autonomous
+      summary: merges its own PRs for changes the repo lists
+      rule: |-
+        A human reviews after the fact.
+
+        - This applies only to the changes this repo lists as autonomous. For anything else, work on your own branch, open a PR, and never merge.
+        - For listed changes, merge your PR once CI passes.
+
+- id: code
+  title: Code
+  summary: how code is written
+  parts:
+    - id: understanding
+      summary: every line is understood by whoever maintains it
+      default: rule
+      rule: Understanding comes before features. Whoever maintains the code must be able to understand every line.
+      opposite: Shipping comes first. Complex code is fine if it works and is tested.
+    - id: simple
+      summary: small and simple over general
+      default: rule
+      rule: Keep it small and simple. Solve the problem at hand, not a general version of it.
+      opposite: Prefer general, extensible designs that anticipate related needs.
+    - id: speculation
+      summary: no stubs or unused abstractions
+      default: rule
+      rule: "Nothing speculative: no stubs, empty modules, or abstractions without a current use."
+      opposite: Scaffold ahead. Stubs and abstractions for planned work are welcome.
+    - id: comments
+      summary: comment only what the code can't say
+      default: rule
+      rule: Comment only what the code cannot say itself, as a short, precise claim. No narration or history.
+      opposite: Comment generously. Explain what the code does and why.
+    - id: tests
+      summary: every behavior change has a test
+      rule: Every behavior change comes with a test that fails without it.
+      opposite: Tests are optional. Add them where they clearly help.
+    - id: generated
+      summary: generated files are never edited by hand
+      rule: Never edit generated files by hand. Change the source and regenerate.
+      opposite: Generated files may be edited by hand when regenerating is impractical. Say so in the commit.
+
+- id: modularity
+  title: Modularity
+  summary: how code is split into files, functions and modules
+  parts:
+    - id: concern
+      summary: one responsibility per module
+      default: rule
+      rule: Each package or module has one clear responsibility.
+      opposite: Group code by feature or convenience. A module may cover several concerns.
+    - id: files
+      summary: short files
+      rule: Keep files under about 300 lines. Split a file when it covers more than one concern.
+      opposite: File length doesn't matter. Keep related code together, however long the file.
+    - id: functions
+      summary: short functions
+      rule: Keep functions short enough to read at once, about 40 lines.
+      opposite: Function length doesn't matter. Prefer fewer, longer functions over many small ones.
+    - id: layers
+      summary: no needless indirection
+      default: rule
+      rule: "No needless layers: no interfaces, wrappers or packages with a single caller or implementation."
+      opposite: Put interfaces between components, even with a single implementation.
+    - id: duplication
+      summary: duplicate before abstracting
+      default: rule
+      rule: A little duplication beats the wrong abstraction. Extract shared code on its third use.
+      opposite: Extract shared code as soon as it appears twice.
+
+- id: libraries
+  title: Libraries
+  summary: when and how to depend on other code
+  parts:
+    - id: stdlib
+      summary: standard library first
+      default: rule
+      rule: Use the standard library first. Add a library only when it clearly earns its place.
+      opposite: Prefer established libraries over writing the code yourself.
+    - id: ask
+      summary: ask before changing libraries
+      rule: Ask before adding, removing or upgrading a library.
+      opposite: Add, remove or upgrade libraries as needed, and mention it in your summary.
+    - id: pinned
+      summary: exact versions, upgraded deliberately
+      rule: Pin exact versions. Upgrade one library at a time, on purpose.
+      opposite: Use version ranges and keep libraries on their latest compatible versions.
+    - id: maintained
+      summary: only maintained, widely used libraries
+      rule: Only add libraries that are actively maintained and widely used.
+      opposite: Any library that does the job well is acceptable, however small or new.
+
+- id: writing
+  title: Writing
+  summary: docs, messages and PR text
+  parts:
+    - id: concise
+      summary: plain and concise, no marketing
+      default: rule
+      rule: Docs, commit messages and PR descriptions are plain and concise. No marketing or filler.
+      opposite: Docs, commit messages and PR descriptions are detailed, with full context and background.
+    - id: docs-with-code
+      summary: docs change with the code
+      rule: Update docs in the same change as the code they describe.
+      opposite: Docs are updated separately from code changes.
+
+- id: git
+  title: Git
+  summary: commits and history
+  parts:
+    - id: atomic
+      summary: one logical change per commit
+      default: rule
+      rule: One logical change per commit. The history should read as a series of intentional steps.
+      opposite: Commits may bundle related changes. Their granularity doesn't matter.
+    - id: squash
+      summary: no WIP or fixup commits
+      default: rule
+      rule: No WIP or fixup commits. Squash them before pushing.
+      opposite: Keep WIP and fixup commits. The history shows how the work happened.
+    - id: subject
+      summary: imperative subject, 72 characters
+      default: rule
+      rule: Write the subject in the imperative, 72 characters or fewer. Add a body only to explain why.
+      opposite: Commit messages have no required format.
+    - id: conventional
+      summary: Conventional Commits prefixes
+      rule: "Prefix subjects with a Conventional Commits type: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`."
+      opposite: Don't prefix subjects with a type.
+    - id: linear
+      summary: rebase, no merge commits on branches
+      rule: Rebase onto the default branch instead of merging it in. Branches have no merge commits.
+      opposite: Merge the default branch into your branch instead of rebasing.
+    - id: signed
+      summary: signed commits
+      rule: Sign every commit (`git commit -S`).
+      opposite: Commits don't need to be signed.
+    - id: attribution
+      summary: no AI attribution
+      default: rule
+      rule: "No AI attribution: no `Co-Authored-By` trailers or \"generated by\" lines in commits, PRs or issues."
+      opposite: Credit AI agents with a `Co-Authored-By` trailer in commits they helped write.
+
+- id: controls
+  title: Controls
+  summary: limits on what an agent does
+  parts:
+    - id: scope
+      summary: stay within the task
+      default: rule
+      rule: Stay within the task. Report unrelated problems instead of fixing them.
+      opposite: Fix related problems you find along the way, and mention them in your summary.
+    - id: ask
+      summary: ask instead of guessing
+      default: rule
+      rule: When requirements are unclear, ask instead of guessing.
+      opposite: When requirements are unclear, make a reasonable assumption, state it, and continue.
+    - id: checks
+      summary: run checks before reporting done
+      default: rule
+      rule: Run the repo's checks before reporting work as done, and report failures as they are.
+      opposite: Leave running checks to CI.
+    - id: destructive
+      summary: nothing destructive without asking
+      default: rule
+      rule: Never delete branches or files outside the task, force-push, or rewrite published history without asking.
+      opposite: Destructive git and file operations are allowed when the task needs them.
+    - id: secrets
+      summary: never touch secrets
+      default: rule
+      rule: "Never read, print or commit secrets: `.env` files, keys, tokens, credentials."
+      opposite: Secrets may be read when the task needs them, but never printed or committed.
+    - id: network
+      summary: no network access without asking
+      rule: "Ask before any network access other than installing declared libraries: web pages, external APIs, remote services."
+      opposite: Network access is allowed.
+    - id: summary
+      summary: end each task with a summary
+      rule: "End each task with a short summary: what changed, why, and anything left undone."
+      opposite: No summary needed. The diff speaks for itself.
+
+- id: planning
+  title: Planning
+  summary: how work is tracked
+  one: true
+  parts:
+    - id: none
+      summary: no formal planning
+      rule: There is no formal planning system. Work comes from direct requests.
+    - id: light
+      summary: issues with type labels, and docs/future.md
+      rule: |-
+        - Work is tracked in GitHub issues, one per change that fits in one PR. PRs close their issue with `Closes #n`.
+        - Every issue has one label: `type: feature`, `type: bug`, `type: design` (an open question) or `type: chore` (tooling, CI, refactors, dependencies).
+        - Ideas that are not planned go in `docs/future.md`.
+    - id: milestones
+      summary: design docs, milestones, type/area/feature labels
+      rule: |-
+        - `docs/design/`: how the project works and why, one short file per topic. A design change is a PR to it. When design and code disagree, fix one of them in the same PR.
+        - `docs/future.md`: ideas that are not planned. An idea moves into `docs/design/` and onto GitHub once it is committed to.
+        - Milestones are numbered `M0`, `M1`, … Each description states the goal and a concrete "done when", and the milestone closes only when that holds.
+        - One issue per change that fits in one PR, in a milestone. PRs close their issue with `Closes #n`. Only trivial fixes go without an issue.
+        - Every issue has one `type` label (`feature`, `bug`, `design`, `chore`) and at least one `area` label for the module touched. A `feature` label for the product feature is optional.
+    - id: kanban
+      summary: a project board; agents move their own cards
+      rule: |-
+        - Work is tracked on the repo's GitHub project board, in the columns Todo, In progress, Review and Done.
+        - Move a card to In progress when you start it and to Review when its PR is open. Only a human moves cards to Done.
+        - Hold one card in progress at a time.
+        - Ideas that are not planned go in `docs/future.md`.
+    - id: rfc
+      summary: larger changes start as a written proposal
+      rule: |-
+        - Changes beyond small fixes start as an RFC in `docs/rfcs/NNNN-title.md`: the problem, the proposal, alternatives and open questions.
+        - An RFC is merged once accepted. Implementation starts only after that, and its PRs link the RFC.
+        - Small fixes and chores go straight to an issue or PR.
